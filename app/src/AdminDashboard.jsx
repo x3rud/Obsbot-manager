@@ -119,7 +119,7 @@ export default function AdminDashboard() {
     );
   }
 
-  async function sendSingleCommand(mode, cam, command, data) {
+  async function sendSingleCommand(mode, cam, command, data, refresh = true) {
     if (!cam) return;
     const errors = {};
     try {
@@ -136,14 +136,16 @@ export default function AdminDashboard() {
         errors[cam.id] = err.message;
       }
     setErrors(errors);
-    toast.promise(
-      checkSingleStatus(cam),
-      {
-        loading: 'Loadig statuses...',
-        success: <b>Status Loaded!</b>,
-        error: <b>Ops!</b>,
-      }
-    );
+    if(refresh) {
+      toast.promise(
+        checkSingleStatus(cam),
+        {
+          loading: 'Loadig statuses...',
+          success: <b>Status Loaded!</b>,
+          error: <b>Ops!</b>,
+        }
+      );
+    }
   }
 
   const handleAddCamera = async () => {
@@ -188,6 +190,13 @@ export default function AdminDashboard() {
     }
   };
 
+  const disableGestureControls = (cam) => {
+    sendSingleCommand('put', cam, '/ai/gesturecontrol/lockedtarget', {enable: false}, false) 
+    sendSingleCommand('put', cam, '/ai/gesturecontrol/recording', {enable: false}, false) 
+    sendSingleCommand('put', cam, '/ai/gesturecontrol/zoom', {enable: false}, false) 
+    sendSingleCommand('put', cam, '/ai/gesturecontrol/zoomfactor', {enable: false}) 
+  }
+
   return (
     <div className="p-6 bg-neutral-800 min-h-screen text-white">
       <div><Toaster/></div>
@@ -229,6 +238,11 @@ export default function AdminDashboard() {
                         <p className="text-yellow-400 text-sm mt-2">{errors[cam.id]}</p>
                       )}
                       <div className="flex justify-end space-x-2 mt-2">
+                        <Button onClick={() => disableGestureControls(cam) }>
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M10.05 4.575a1.575 1.575 0 1 0-3.15 0v3m3.15-3v-1.5a1.575 1.575 0 0 1 3.15 0v1.5m-3.15 0 .075 5.925m3.075.75V4.575m0 0a1.575 1.575 0 0 1 3.15 0V15M6.9 7.575a1.575 1.575 0 1 0-3.15 0v8.175a6.75 6.75 0 0 0 6.75 6.75h2.018a5.25 5.25 0 0 0 3.712-1.538l1.732-1.732a5.25 5.25 0 0 0 1.538-3.712l.003-2.024a.668.668 0 0 1 .198-.471 1.575 1.575 0 1 0-2.228-2.228 3.818 3.818 0 0 0-1.12 2.687M6.9 7.575V12m6.27 4.318A4.49 4.49 0 0 1 16.35 15m.002 0h-.002" />
+                          </svg>
+                        </Button>
                         <Button onClick={() => statuses[cam.id] ?  sendSingleCommand('put', cam, '/ai/workmode', {mode: "none"}) : sendSingleCommand('put', cam, '/ai/workmode', {mode: "humanTrackingSingleMode"}) } className={(statuses[cam.id] ? 'bg-red-500' : '')}>
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 3.75H6A2.25 2.25 0 0 0 3.75 6v1.5M16.5 3.75H18A2.25 2.25 0 0 1 20.25 6v1.5m0 9V18A2.25 2.25 0 0 1 18 20.25h-1.5m-9 0H6A2.25 2.25 0 0 1 3.75 18v-1.5M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
@@ -332,7 +346,7 @@ export default function AdminDashboard() {
                 ))}
               </select>
               <div className="flex justify-end space-x-2">
-                <Button onClick={() => setShowAddCameraModal(false)}>Cancel</Button>
+                <Button onClick={() => setShowEditCameraModal(false)}>Cancel</Button>
                 <Button onClick={handleEditCamera}>Edit</Button>
               </div>
             </div>
