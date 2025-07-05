@@ -115,7 +115,7 @@ export default function AdminDashboard() {
     setErrors(errors);
     setInfos(infos);
     toast.promise(
-      checkStatus(cameras),
+      checkStatus(groupCameras),
       {
         loading: 'Loadig statuses...',
         success: <b>Status Loaded!</b>,
@@ -196,9 +196,9 @@ export default function AdminDashboard() {
   };
 
   const disableGestureControls = (cam) => {
-    sendSingleCommand('put', cam, '/ai/gesturecontrol/lockedtarget', {enable: false}, false) 
-    sendSingleCommand('put', cam, '/ai/gesturecontrol/recording', {enable: false}, false) 
-    sendSingleCommand('put', cam, '/ai/gesturecontrol/zoom', {enable: false}, false)
+    sendSingleCommand('put', cam, 'ai/gesturecontrol/lockedtarget', {enable: false}, false) 
+    sendSingleCommand('put', cam, 'ai/gesturecontrol/recording', {enable: false}, false) 
+    sendSingleCommand('put', cam, 'ai/gesturecontrol/zoom', {enable: false}, false)
   }
 
   return (
@@ -223,9 +223,9 @@ export default function AdminDashboard() {
                   <h2 className="text-xl font-semibold text-white">Group: {group.name}</h2>
                 </div>
                 <div className="flex justify-end items-center gap-4">
-                  <Button onClick={() => sendCommand('put', group.id, '/ai/workmode', {mode: "humanTrackingSingleMode"})}> {group.name} - Start Tracking</Button>
-                  <Button onClick={() => sendCommand('put',group.id, '/ai/workmode', {mode: "none"})}>{group.name} - Stop Tracking</Button>
-                  <Button onClick={() => sendCommand('put', group.id, '/ptz/preset', { operation: "call", id: 0})}>{group.name} - Reset position</Button>
+                  <Button onClick={() => sendCommand('put', group.id, 'ai/workmode', {mode: "humanTrackingSingleMode"})}> {group.name} - Start Tracking</Button>
+                  <Button onClick={() => sendCommand('put',group.id, 'ai/workmode', {mode: "none"})}>{group.name} - Stop Tracking</Button>
+                  <Button onClick={() => sendCommand('put', group.id, 'ptz/preset', { operation: "call", id: 0})}>{group.name} - Reset position</Button>
                 </div>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-4">
@@ -257,7 +257,7 @@ export default function AdminDashboard() {
                         
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button onClick={() => statuses[cam.id] ?  sendSingleCommand('put', cam, '/ai/workmode', {mode: "none"}) : sendSingleCommand('put', cam, '/ai/workmode', {mode: "humanTrackingSingleMode"}) } className={(statuses[cam.id] ? 'bg-red-500' : '')}>
+                            <Button onClick={() => statuses[cam.id] ?  sendSingleCommand('put', cam, 'ai/workmode', {mode: "none"}) : sendSingleCommand('put', cam, 'ai/workmode', {mode: "humanTrackingSingleMode"}) } className={(statuses[cam.id] ? 'bg-red-500' : '')}>
                               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 3.75H6A2.25 2.25 0 0 0 3.75 6v1.5M16.5 3.75H18A2.25 2.25 0 0 1 20.25 6v1.5m0 9V18A2.25 2.25 0 0 1 18 20.25h-1.5m-9 0H6A2.25 2.25 0 0 1 3.75 18v-1.5M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                               </svg>

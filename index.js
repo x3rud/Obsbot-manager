@@ -123,7 +123,8 @@ app.put('/api/command', async (req, res) => {
   const { ip, command, data } = req.body;
   try {
     const response = await axios.put(`http://${ip}/camera/sdk/${command}`, data);
-    Logger.success("Camera: " + ip + " --> " + response.data);
+    Logger.info(`Camera: http://${ip}/camera/sdk/${command}`);
+    Logger.success("Camera: " + ip + " --> " + JSON.stringify(response.data));
     res.status(response.status).json(response.data);
   } catch (err) {
     const status = err.response?.status || 500;
