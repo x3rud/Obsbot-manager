@@ -6,6 +6,7 @@ const sqlite3 = require('sqlite3').verbose();
 const axios = require('axios');
 const ping = require('ping');
 const puppeteer = require('puppeteer');
+const Logger = require('./utils/logger');
 
 const app = express();
 
@@ -109,9 +110,11 @@ app.post('/api/command', async (req, res) => {
   const { ip, command, data } = req.body;
   try {
     const response = await axios.post(`http://${ip}/camera/sdk/${command}`, data);
+    Logger.success("Camera: " + ip + " --> " + response.data);
     res.status(response.status).json(response.data);
   } catch (err) {
     const status = err.response?.status || 500;
+    Logger.error("Camera: " + ip + " --> Error: " + err.message);
     res.status(status).json({ error: err.message });
   }
 });
@@ -120,9 +123,11 @@ app.put('/api/command', async (req, res) => {
   const { ip, command, data } = req.body;
   try {
     const response = await axios.put(`http://${ip}/camera/sdk/${command}`, data);
+    Logger.success("Camera: " + ip + " --> " + response.data);
     res.status(response.status).json(response.data);
   } catch (err) {
     const status = err.response?.status || 500;
+    Logger.error("Camera: " + ip + " --> Error: " + JSON.stringify(err.response.body));
     res.status(status).json({ error: err.message });
   }
 });
@@ -149,9 +154,10 @@ app.get('/api/camera-status/:ip', async (req, res) => {
 
     res.json({ status: buttonColor });
   } catch (err) {
+    Logger.error("Camera: " + ip + " --> Error: " + err.message);
     res.status(500).json({ error: 'Failed to fetch camera UI color', details: err.message });
   }
 });
 
 
-app.listen(3001, () => console.log('API running on http://localhost:3001'));
+app.listen(3001, () =>  Logger.info('API running on http://localhost:3001'));

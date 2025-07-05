@@ -198,8 +198,7 @@ export default function AdminDashboard() {
   const disableGestureControls = (cam) => {
     sendSingleCommand('put', cam, '/ai/gesturecontrol/lockedtarget', {enable: false}, false) 
     sendSingleCommand('put', cam, '/ai/gesturecontrol/recording', {enable: false}, false) 
-    sendSingleCommand('put', cam, '/ai/gesturecontrol/zoom', {enable: false}, false) 
-    sendSingleCommand('put', cam, '/ai/gesturecontrol/zoomfactor', {enable: false}) 
+    sendSingleCommand('put', cam, '/ai/gesturecontrol/zoom', {enable: false}, false)
   }
 
   return (
@@ -252,7 +251,7 @@ export default function AdminDashboard() {
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            Disable Gestures Control
+                            Only Disable Gestures Control
                           </TooltipContent>
                         </Tooltip>
                         
