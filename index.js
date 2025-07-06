@@ -98,10 +98,12 @@ app.delete('/api/cameras/:id', (req, res) => {
 });
 
 app.get('/api/ping/:ip', async (req, res) => {
+  const {ip} = req.params;
   try {
-    const result = await ping.promise.probe(req.params.ip);
+    const result = await ping.promise.probe(ip);
+    Logger.info(JSON.stringify(result));
     result.alive ? res.sendStatus(200) : res.sendStatus(503);
-  } catch {
+  } catch (err) {
     res.sendStatus(500);
   }
 });
@@ -110,7 +112,7 @@ app.post('/api/command', async (req, res) => {
   const { ip, command, data } = req.body;
   try {
     const response = await axios.post(`http://${ip}/camera/sdk/${command}`, data);
-    Logger.success("Camera: " + ip + " --> " + response.data);
+    Logger.success("Camera: " + ip + " --> " + JSON.stringify(response.data));
     res.status(response.status).json(response.data);
   } catch (err) {
     const status = err.response?.status || 500;
