@@ -74,18 +74,16 @@ export default function AdminDashboard() {
   }
 
   async function checkStatus(camerasList = cameras) {
-    const statusMap = statuses;
     await Promise.all(
       camerasList.map(async (cam) => {
         try {
           const res = await axios({method: 'get', url: `${API_BASE}/camera-status/${cam.ip}`});
-          statusMap[cam.id] = res.data.status;
+          setStatuses(prev => ({ ...prev, [cam.id]: res.data.status }));
         } catch {
-          statusMap[cam.id] = false;
+          setStatuses(prev => ({ ...prev, [cam.id]: false }));
         }
       })
     );
-    setStatuses(statusMap);
   }
 
   async function checkAlive(camerasList =  cameras) {
@@ -113,18 +111,17 @@ export default function AdminDashboard() {
   }
 
   async function checkSingleStatus(cam) {
-    const statusMap = statuses;
+    const statusMap = {};
     try {
       const res = await axios({method: 'get', url: `${API_BASE}/camera-status/${cam.ip}`});
-      statusMap[cam.id] = res.data.status;
+      setStatuses(prev => ({ ...prev, [cam.id]: res.data.status }));
     } catch {
-      statusMap[cam.id] = false;
+      setStatuses(prev => ({ ...prev, [cam.id]: false }));
     }
-    setStatuses(statusMap); 
   }
 
 
-  async function sendCommand(mode, groupId, command, data) {
+  async function sendCommand(mode, groupId, command, data, refresh = true) {
     const group = groups.find(g => g.id === groupId);
     if (!group) return;
     const groupCameras = cameras.filter(c => c.groupId === groupId);
@@ -151,14 +148,16 @@ export default function AdminDashboard() {
     );
     setErrors(errors);
     setInfos(infos);
-    toast.promise(
-      checkStatus(groupCameras),
-      {
-        loading: 'Loadig statuses...',
-        success: <b>Status Loaded!</b>,
-        error: <b>Ops!</b>,
-      }
-    );
+    if(refresh) {
+      toast.promise(
+        checkStatus(groupCameras),
+        {
+          loading: 'Loadig statuses...',
+          success: <b>Status Loaded!</b>,
+          error: <b>Ops!</b>,
+        }
+      );
+    }
   }
 
   async function sendSingleCommand(mode, cam, command, data, refresh = true) {
