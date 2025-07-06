@@ -20,7 +20,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import useInterval from 'use-interval';
 
 const API_BASE = 'http://localhost:3001/api'; // Assuming backend is exposed under /api
 
@@ -40,15 +39,6 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchData().then(() => checkAlive());
   }, []);
-
-  useInterval(
-    () => {
-        //counter function
-        checkAlive(cameras)
-    },
-    // Passing in the delay parameter. null stops the counter. 
-    30000,
-  )
 
   useEffect(() => {
     if (Object.keys(infos).length > 0) {
@@ -254,6 +244,7 @@ export default function AdminDashboard() {
       <div className="flex justify-between items-center mb-4 space-x-2">
         <h1 className="text-2xl font-bold">OBSBOT Camera Admin</h1>
         <div className="space-x-2">
+          <Button onClick={() => checkAlive(cameras)}>Check alive</Button>
           <Button onClick={() => setShowAddGroupModal(true)}>Add Group</Button>
           <Button onClick={() => setShowAddCameraModal(true)}>Add Camera</Button>
         </div>
@@ -272,7 +263,7 @@ export default function AdminDashboard() {
                 <div className="flex justify-end items-center gap-4">
                   <Button onClick={() => sendCommand('put', group.id, 'ai/workmode', {mode: "humanTrackingSingleMode"})}> {group.name} - Start Tracking</Button>
                   <Button onClick={() => sendCommand('put',group.id, 'ai/workmode', {mode: "none"})}>{group.name} - Stop Tracking</Button>
-                  <Button onClick={() => sendCommand('put', group.id, 'ptz/preset', { operation: "call", id: 0})}>{group.name} - Reset position</Button>
+                  <Button onClick={() => sendCommand('put', group.id, 'ptz/preset', { operation: "call", id: 0}, false)}>{group.name} - Reset position</Button>
                 </div>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-4">
@@ -283,9 +274,7 @@ export default function AdminDashboard() {
                     <div key={cam.id} className="border-0 bg-neutral-800 rounded p-2">
                       <div className="flex justify-between items-center">
                         <span>{cam.name}</span>
-                        <span className={alives[cam.id] ? 'text-green-700' : 'text-red-700'}>
-                          ●
-                        </span>
+                        <span className={alives[cam.id] ? 'text-green-700' : 'text-red-700'}> ⬤ </span>
                       </div>
                       <p className="text-sm text-gray-400">{cam.ip}</p>
                       {errors[cam.id] && (

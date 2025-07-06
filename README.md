@@ -14,6 +14,7 @@ A full-stack Node.js + React control interface for managing multiple **OBSBOT Ta
 - ⚠️ **Batch Command Feedback**: Get a warning if some cameras fail during a batch command.
 - 🎨 **Dark Mode UI**: Built using TailwindCSS for a sleek modern interface.
 - 📋 **Log System**: Timestamped terminal logs with color-coded severity using `chalk`.
+- ✅ **Check Alive System**: Check manually if the camera still alive on the network.
 
 ---
 
