@@ -101,17 +101,16 @@ app.get('/api/ping/:ip', async (req, res) => {
   const {ip} = req.params;
   try {
     const result = await ping.promise.probe(ip);
-    Logger.info(JSON.stringify(result));
     result.alive ? res.sendStatus(200) : res.sendStatus(503);
-  } catch (err) {
+  } catch {
     res.sendStatus(500);
   }
 });
 
 app.post('/api/command', async (req, res) => {
-  const { ip, command, data } = req.body;
+  const { ip, command, data, mode } = req.body;
   try {
-    const response = await axios.post(`http://${ip}/camera/sdk/${command}`, data);
+    const response = await axios({method: mode, url:`http://${ip}/camera/sdk/${command}`, data: data});
     Logger.success("Camera: " + ip + " --> " + JSON.stringify(response.data));
     res.status(response.status).json(response.data);
   } catch (err) {
@@ -120,21 +119,6 @@ app.post('/api/command', async (req, res) => {
     res.status(status).json({ error: err.message });
   }
 });
-
-app.put('/api/command', async (req, res) => {
-  const { ip, command, data } = req.body;
-  try {
-    const response = await axios.put(`http://${ip}/camera/sdk/${command}`, data);
-    Logger.info(`Camera: http://${ip}/camera/sdk/${command}`);
-    Logger.success("Camera: " + ip + " --> " + JSON.stringify(response.data));
-    res.status(response.status).json(response.data);
-  } catch (err) {
-    const status = err.response?.status || 500;
-    Logger.error("Camera: " + ip + " --> Error: " + JSON.stringify(err.response.body));
-    res.status(status).json({ error: err.message });
-  }
-});
-
 
 app.get('/api/camera-status/:ip', async (req, res) => {
   const { ip } = req.params;
