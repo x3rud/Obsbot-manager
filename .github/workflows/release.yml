@@ -1,0 +1,46 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-exe:
+    name: Build Windows .exe
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install root dependencies
+        run: pnpm install --force
+
+      - name: Build frontend
+        run: |
+          cd app
+          pnpm install
+          pnpm run build
+
+      - name: Build Windows exe
+        run: npx pkg . --targets node20-win-x64 --output dist/obsbot.exe
+
+      - name: Upload exe to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/obsbot.exe
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

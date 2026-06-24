@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import axios from 'axios';
 import toast from 'react-hot-toast';
 import { Toaster } from 'react-hot-toast';
 import IconTooltipButton from './components/ui/icon-tooltip-button';
-import { HandRaisedIcon, ViewfinderCircleIcon, ArrowsPointingInIcon, GlobeAltIcon, PencilSquareIcon, InformationCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import { HandRaisedIcon, ViewfinderCircleIcon, ArrowsPointingInIcon, GlobeAltIcon, PencilSquareIcon, InformationCircleIcon, ExclamationTriangleIcon, ArrowsPointingOutIcon } from '@heroicons/react/24/outline'
 import DeleteAlterDialog from './components/ui/delete-alert-dialog';
 import CameraDialog from './components/ui/camera-dialog';
 import GroupDialog from './components/ui/group-dialog';
@@ -14,8 +13,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-
-const API_BASE = 'http://localhost:3001/api'; 
+import { apiClient } from '@/lib/apiClient';
+import PtzJoystick from './components/ui/ptz-joystick';
 
 export default function AdminDashboard() {
   const [groups, setGroups] = useState([]);
@@ -25,6 +24,9 @@ export default function AdminDashboard() {
   const [statuses, setStatuses] = useState({});
   const [alives, setAlives] = useState({});
   const [cameraInfo, setCameraInfo] = useState({});
+  const [joystickOpen, setJoystickOpen] = useState({});
+  const [updateInfo, setUpdateInfo] = useState(null);
+  const [updateStatus, setUpdateStatus] = useState('idle'); // idle | checking | applying
 
   useEffect(() => {
     fetchData();
@@ -46,8 +48,8 @@ export default function AdminDashboard() {
 
   async function fetchData() {
     const [groupRes, cameraRes] = await Promise.all([
-      axios.get(`${API_BASE}/groups`),
-      axios.get(`${API_BASE}/cameras`),
+      apiClient.getGroups(),
+      apiClient.getCameras(),
     ]);
 
     setGroups(groupRes.data);
@@ -70,7 +72,7 @@ export default function AdminDashboard() {
     await Promise.all(
       camerasList.map(async (cam) => {
         try {
-          const res = await axios({method: 'get', url: `${API_BASE}/camera-status/${cam.ip}`});
+          const res = await apiClient.getCameraStatus(cam.ip);
           setStatuses(prev => ({ ...prev, [cam.id]: res.data.status }));
         } catch {
           setStatuses(prev => ({ ...prev, [cam.id]: false }));
@@ -84,16 +86,7 @@ export default function AdminDashboard() {
     await Promise.all(
       camerasList.map(async (cam) => {
         try {
-          const res = await axios({
-            method: 'get',
-            url: `${API_BASE}/ping/${cam.ip}`,
-            headers: {
-              'Accept': 'application/json',
-              'Cache-Control': 'no-cache',
-              Pragma: 'no-cache',
-              Expires: '0',
-            },
-          });
+          const res = await apiClient.pingCamera(cam.ip);
           aliveMap[cam.id] = res.status === 200;
         } catch {
           aliveMap[cam.id] = false;
@@ -105,7 +98,7 @@ export default function AdminDashboard() {
 
   async function checkSingleStatus(cam) {
     try {
-      const res = await axios({method: 'get', url: `${API_BASE}/camera-status/${cam.ip}`});
+      const res = await apiClient.getCameraStatus(cam.ip);
       setStatuses(prev => ({ ...prev, [cam.id]: res.data.status }));
     } catch {
       setStatuses(prev => ({ ...prev, [cam.id]: false }));
@@ -122,12 +115,7 @@ export default function AdminDashboard() {
     await Promise.all(
       groupCameras.map(async (cam) => {
         try {
-          const res = await axios.post(`${API_BASE}/command`, {
-            ip: cam.ip,
-            command,
-            data,
-            mode
-          });
+          const res = await apiClient.sendCommand(cam.ip, command, data, mode);
           if (res.status !== 200) {
             errors[cam.id] = `Returned ${res.status}`;
           }else{
@@ -158,12 +146,7 @@ export default function AdminDashboard() {
     const infos = {};
     let res;
     try {
-      res = await axios.post(`${API_BASE}/command`, {
-        ip: cam.ip,
-        command,
-        data,
-        mode
-      });
+      res = await apiClient.sendCommand(cam.ip, command, data, mode);
       if (res.status !== 200) {
         errors[cam.id] = `Returned ${res.status}`;
       }else {
@@ -227,7 +210,7 @@ export default function AdminDashboard() {
 
   const handleAddCamera = async (camera) => {
     try {
-      await axios.post(`${API_BASE}/cameras`, camera);
+      await apiClient.addCamera(camera);
       fetchData();
     } catch (err) {
       console.error(err);
@@ -236,7 +219,7 @@ export default function AdminDashboard() {
 
   const handleEditCamera = async (camera) => {
     try {
-      await axios.put(`${API_BASE}/cameras/${camera.id}`, camera);
+      await apiClient.editCamera(camera.id, camera);
       fetchData();
     } catch (err) {
       console.error(err);
@@ -245,16 +228,51 @@ export default function AdminDashboard() {
 
   const handleAddGroup = async (group) => {
     try {
-      await axios.post(`${API_BASE}/groups`, group);
+      await apiClient.addGroup(group);
       fetchData();
     } catch (err) {
       console.error(err);
     }
   };
 
+  const handleDeleteGroup = async (id) => {
+    try {
+      await apiClient.deleteGroup(id);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const checkForUpdates = async () => {
+    setUpdateStatus('checking');
+    try {
+      const res = await apiClient.checkUpdate();
+      setUpdateInfo(res.data);
+      if (res.data.upToDate) toast.success(`Already on latest (${res.data.current})`);
+    } catch {
+      toast.error('Could not reach GitHub to check for updates');
+    } finally {
+      setUpdateStatus('idle');
+    }
+  };
+
+  const applyUpdate = async () => {
+    setUpdateStatus('applying');
+    try {
+      const res = await apiClient.applyUpdate();
+      toast.success(res.data.message);
+      setUpdateInfo(null);
+    } catch (err) {
+      toast.error('Update failed: ' + (err.response?.data?.error ?? err.message));
+    } finally {
+      setUpdateStatus('idle');
+    }
+  };
+
   const handleDeleteCamera = async (id) => {
     try {
-      await axios.delete(`${API_BASE}/cameras/${id}`);
+      await apiClient.deleteCamera(id);
       fetchData();
     } catch (err) {
       console.error(err);
@@ -279,6 +297,22 @@ export default function AdminDashboard() {
       <div className="flex justify-between items-center mb-4 space-x-2">
         <h1 className="text-2xl font-bold">OBSBOT Camera Admin</h1>
         <div className="flex items-end space-x-2">
+          {updateInfo && !updateInfo.upToDate && (
+            <Button
+              onClick={applyUpdate}
+              disabled={updateStatus === 'applying'}
+              className="bg-yellow-500 hover:bg-yellow-400 text-black"
+            >
+              {updateStatus === 'applying' ? 'Updating…' : `Update to ${updateInfo.latest}`}
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            onClick={checkForUpdates}
+            disabled={updateStatus === 'checking'}
+          >
+            {updateStatus === 'checking' ? 'Checking…' : updateInfo?.current ? `v${updateInfo.current}` : 'Check updates'}
+          </Button>
           <Button onClick={() => toast.promise( checkAlive(cameras), {
               loading: 'Checking alive',
               success: <b>Success!</b>,
@@ -305,6 +339,10 @@ export default function AdminDashboard() {
                   <Button onClick={() => sendCommand('put', group.id, 'ai/workmode', {mode: "humanTrackingSingleMode"})}> {group.name} - Start Tracking</Button>
                   <Button onClick={() => sendCommand('put',group.id, 'ai/workmode', {mode: "none"})}>{group.name} - Stop Tracking</Button>
                   <Button onClick={() => sendCommand('put', group.id, 'ptz/preset', { operation: "call", id: 0}, false)}>{group.name} - Reset position</Button>
+                  <DeleteAlterDialog
+                    onClick={() => handleDeleteGroup(group.id)}
+                    description={`This will permanently delete the group "${group.name}" and all its cameras from the database.`}
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-4">
@@ -354,9 +392,9 @@ export default function AdminDashboard() {
                         />
 
                         <IconTooltipButton 
-                          onClick={() => statuses[cam.id] ?  sendSingleCommand('put', cam, 'ai/workmode', {mode: "none"}) : sendSingleCommand('put', cam, 'ai/workmode', {mode: "humanTrackingSingleMode"})} 
+                          onClick={() => sendSingleCommand('post', cam, '/ptz/reset')} 
                           className={(statuses[cam.id] ? 'bg-red-500' : '')}
-                          tooltip={"Start / Stop Tracking"}
+                          tooltip={"Reset"}
                           icon={<ViewfinderCircleIcon className="size-6"/>}
                         />
 
@@ -372,14 +410,23 @@ export default function AdminDashboard() {
                           icon={<GlobeAltIcon className="size-6"/>}
                         />
 
-                        <CameraDialog onClick={handleEditCamera} 
+                        <CameraDialog onClick={handleEditCamera}
                           trigger={<PencilSquareIcon className="size-6"/>}
                           groups={groups}
                           camera={cam}
                         />
 
                         <DeleteAlterDialog onClick={() => handleDeleteCamera(cam.id)}/>
+
+                        <IconTooltipButton
+                          onClick={() => setJoystickOpen(prev => ({ ...prev, [cam.id]: !prev[cam.id] }))}
+                          tooltip={"PTZ Joystick"}
+                          className={joystickOpen[cam.id] ? 'bg-blue-600' : ''}
+                          icon={<ArrowsPointingOutIcon className="size-6"/>}
+                        />
                       </div>
+
+                      {joystickOpen[cam.id] && <PtzJoystick cam={cam} />}
                       </CardContent>
                     </Card>
                   ))

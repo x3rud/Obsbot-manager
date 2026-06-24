@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from '@/components/ui/button';
 
-export default function DeleteAlterDialog({ onClick }) {
+export default function DeleteAlterDialog({ onClick, description = 'This action cannot be undone. This will permanently delete the camera from the database.' }) {
   return (
    <AlertDialog>
         <AlertDialogTrigger asChild>
@@ -25,7 +25,7 @@ export default function DeleteAlterDialog({ onClick }) {
         <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the camera from the database.
+            {description}
             </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
