@@ -8,11 +8,14 @@ import {
   HandRaisedIcon, ViewfinderCircleIcon, ArrowsPointingInIcon, GlobeAltIcon,
   PencilSquareIcon, InformationCircleIcon, ExclamationTriangleIcon,
   ArrowsPointingOutIcon, Squares2X2Icon, ListBulletIcon,
+  BookmarkSquareIcon, Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
 import DeleteAlterDialog from './components/ui/delete-alert-dialog';
 import CameraDialog from './components/ui/camera-dialog';
 import GroupDialog from './components/ui/group-dialog';
 import BulkCameraDialog from './components/ui/bulk-camera-dialog';
+import CameraPresetsDialog from './components/ui/camera-presets-dialog';
+import CameraSettingsDialog from './components/ui/camera-settings-dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { apiClient } from '@/lib/apiClient';
@@ -324,9 +327,25 @@ export default function AdminDashboard() {
           tooltip="Open webpage"
           icon={<GlobeAltIcon className="size-5" />}
         />
-        {joystickButton}
         <CameraDialog onClick={handleEditCamera} trigger={<PencilSquareIcon className="size-5" />} groups={groups} camera={cam} />
         <DeleteAlterDialog onClick={() => handleDeleteCamera(cam.id)} />
+        <CameraPresetsDialog
+          cam={cam}
+          trigger={
+            <button className="p-1.5 rounded hover:bg-accent" title="Presets">
+              <BookmarkSquareIcon className="size-5" />
+            </button>
+          }
+        />
+        <CameraSettingsDialog
+          cam={cam}
+          trigger={
+            <button className="p-1.5 rounded hover:bg-accent" title="Settings">
+              <Cog6ToothIcon className="size-5" />
+            </button>
+          }
+        />
+        {joystickButton}
       </div>
     );
   }
