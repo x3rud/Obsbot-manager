@@ -6,7 +6,7 @@ const Logger = require('../utils/logger');
 router.post('/', async (req, res) => {
   const { ip, command, data, mode } = req.body;
   try {
-    const response = await axios({ method: mode, url: `http://${ip}/camera/sdk/${command}`, data, timeout: 5000 });
+    const response = await axios({ method: mode, url: `http://${ip}/camera/sdk/${command}`, data, timeout: 10000 });
     Logger.success(`Camera: ${ip} --> ${JSON.stringify(response.data)}`);
     res.status(response.status).json(response.data);
   } catch (err) {

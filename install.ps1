@@ -75,32 +75,11 @@ Set-Location "$INSTALL_DIR\app"
 Write-Host ""
 Write-Host "ObsBot Manager installed."
 Write-Host ""
-Write-Host "==> Starting server..."
-$APP_URL = "http://localhost:3001"
-$job = Start-Job -ScriptBlock {
-  param($dir, $pm)
-  Set-Location $dir
-  & $pm start
-} -ArgumentList $INSTALL_DIR, $PM
 
-Write-Host "==> Waiting for server to be ready..."
-$ready = $false
-for ($i = 0; $i -lt 20; $i++) {
-  Start-Sleep -Seconds 1
-  try {
-    $resp = Invoke-WebRequest -Uri $APP_URL -UseBasicParsing -TimeoutSec 1 -ErrorAction SilentlyContinue
-    if ($resp.StatusCode -eq 200) { $ready = $true; break }
-  } catch { }
-}
+# Open browser first — the server will be up by the time the user switches windows
+Write-Host "==> Opening http://localhost:3001 in your browser..."
+Start-Process "http://localhost:3001"
 
-if ($ready) {
-  Write-Host "==> Server is up. Opening $APP_URL ..."
-} else {
-  Write-Host "==> Server is taking longer than expected — opening browser anyway..."
-}
-Start-Process $APP_URL
-
-Write-Host ""
-Write-Host "  The server is running in the background (job id: $($job.Id))."
-Write-Host "  To stop it: Stop-Job $($job.Id); Remove-Job $($job.Id)"
-Write-Host "  Update:  re-run this script, or use the Update button in the UI"
+Write-Host "==> Starting server (press Ctrl+C to stop)..."
+Set-Location $INSTALL_DIR
+& $PM start
