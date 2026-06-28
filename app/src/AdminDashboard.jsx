@@ -14,6 +14,7 @@ import CameraDialog from './components/ui/camera-dialog';
 import GroupDialog from './components/ui/group-dialog';
 import BulkCameraDialog from './components/ui/bulk-camera-dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { apiClient } from '@/lib/apiClient';
 import PtzJoystick from './components/ui/ptz-joystick';
 
@@ -273,6 +274,33 @@ export default function AdminDashboard() {
   // ── Shared camera action buttons ───────────────────────────────────────────
 
   function CameraActions({ cam }) {
+    const joystickButton = viewMode === 'list' ? (
+      <Dialog
+        open={!!joystickOpen[cam.id]}
+        onOpenChange={open => setJoystickOpen(prev => ({ ...prev, [cam.id]: open }))}
+      >
+        <IconTooltipButton
+          onClick={() => setJoystickOpen(prev => ({ ...prev, [cam.id]: true }))}
+          tooltip="PTZ Joystick"
+          className={joystickOpen[cam.id] ? 'bg-blue-600' : ''}
+          icon={<ArrowsPointingOutIcon className="size-5" />}
+        />
+        <DialogContent className="sm:max-w-xs">
+          <DialogHeader>
+            <DialogTitle>PTZ — {cam.name}</DialogTitle>
+          </DialogHeader>
+          <PtzJoystick cam={cam} />
+        </DialogContent>
+      </Dialog>
+    ) : (
+      <IconTooltipButton
+        onClick={() => setJoystickOpen(prev => ({ ...prev, [cam.id]: !prev[cam.id] }))}
+        tooltip="PTZ Joystick"
+        className={joystickOpen[cam.id] ? 'bg-blue-600' : ''}
+        icon={<ArrowsPointingOutIcon className="size-5" />}
+      />
+    );
+
     return (
       <div className="flex flex-wrap gap-1">
         <IconTooltipButton
@@ -298,12 +326,7 @@ export default function AdminDashboard() {
         />
         <CameraDialog onClick={handleEditCamera} trigger={<PencilSquareIcon className="size-5" />} groups={groups} camera={cam} />
         <DeleteAlterDialog onClick={() => handleDeleteCamera(cam.id)} />
-        <IconTooltipButton
-          onClick={() => setJoystickOpen(prev => ({ ...prev, [cam.id]: !prev[cam.id] }))}
-          tooltip="PTZ Joystick"
-          className={joystickOpen[cam.id] ? 'bg-blue-600' : ''}
-          icon={<ArrowsPointingOutIcon className="size-5" />}
-        />
+        {joystickButton}
       </div>
     );
   }
@@ -500,47 +523,38 @@ export default function AdminDashboard() {
                       </thead>
                       <tbody>
                         {groupCameras.map((cam, idx) => (
-                          <>
-                            <tr
-                              key={cam.id}
-                              className={`border-t border-border transition-colors ${selectedCameras[cam.id] ? 'bg-blue-950/30' : idx % 2 === 0 ? 'bg-background' : 'bg-muted/10'}`}
-                            >
-                              <td className="p-3">
-                                <input
-                                  type="checkbox"
-                                  checked={!!selectedCameras[cam.id]}
-                                  onChange={() => toggleCamera(cam.id)}
-                                  className="accent-blue-500 cursor-pointer"
-                                />
-                              </td>
-                              <td className="p-3">
-                                <span className={alives[cam.id] ? 'text-green-600' : 'text-red-600'}>⬤</span>
-                              </td>
-                              <td className="p-3">
-                                <CameraInfoPopover cam={cam} />
-                                {errors[cam.id] && <p className="text-yellow-400 text-xs mt-0.5">{errors[cam.id]}</p>}
-                                {infos[cam.id] && <p className="text-green-400 text-xs mt-0.5">{infos[cam.id]}</p>}
-                              </td>
-                              <td className="p-3 text-muted-foreground font-mono">{cam.ip}</td>
-                              <td className="p-3">
-                                <span className={`text-xs px-2 py-0.5 rounded-full ${statuses[cam.id] ? 'bg-green-900 text-green-300' : 'bg-gray-800 text-gray-400'}`}>
-                                  {statuses[cam.id] ? 'Tracking' : 'Idle'}
-                                </span>
-                              </td>
-                              <td className="p-3">
-                                <div className="flex justify-end">
-                                  <CameraActions cam={cam} />
-                                </div>
-                              </td>
-                            </tr>
-                            {joystickOpen[cam.id] && (
-                              <tr key={`${cam.id}-joystick`} className="border-t border-border">
-                                <td colSpan={6} className="p-4">
-                                  <PtzJoystick cam={cam} />
-                                </td>
-                              </tr>
-                            )}
-                          </>
+                          <tr
+                            key={cam.id}
+                            className={`border-t border-border transition-colors ${selectedCameras[cam.id] ? 'bg-blue-950/30' : idx % 2 === 0 ? 'bg-background' : 'bg-muted/10'}`}
+                          >
+                            <td className="p-3">
+                              <input
+                                type="checkbox"
+                                checked={!!selectedCameras[cam.id]}
+                                onChange={() => toggleCamera(cam.id)}
+                                className="accent-blue-500 cursor-pointer"
+                              />
+                            </td>
+                            <td className="p-3">
+                              <span className={alives[cam.id] ? 'text-green-600' : 'text-red-600'}>⬤</span>
+                            </td>
+                            <td className="p-3">
+                              <CameraInfoPopover cam={cam} />
+                              {errors[cam.id] && <p className="text-yellow-400 text-xs mt-0.5">{errors[cam.id]}</p>}
+                              {infos[cam.id] && <p className="text-green-400 text-xs mt-0.5">{infos[cam.id]}</p>}
+                            </td>
+                            <td className="p-3 text-muted-foreground font-mono">{cam.ip}</td>
+                            <td className="p-3">
+                              <span className={`text-xs px-2 py-0.5 rounded-full ${statuses[cam.id] ? 'bg-green-900 text-green-300' : 'bg-gray-800 text-gray-400'}`}>
+                                {statuses[cam.id] ? 'Tracking' : 'Idle'}
+                              </span>
+                            </td>
+                            <td className="p-3">
+                              <div className="flex justify-end">
+                                <CameraActions cam={cam} />
+                              </div>
+                            </td>
+                          </tr>
                         ))}
                       </tbody>
                     </table>
