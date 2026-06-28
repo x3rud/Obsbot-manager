@@ -36,7 +36,14 @@ function fetchGithubRelease() {
 
 async function getCurrentVersion() {
   try {
-    return await run('git describe --tags --abbrev=0');
+    const tag = await run('git describe --tags --abbrev=0');
+    if (tag) return tag;
+  } catch { /* no tags — fall through */ }
+
+  // Fall back to package.json version
+  try {
+    const pkg = require(path.join(ROOT, 'package.json'));
+    return `v${pkg.version}`;
   } catch {
     return 'unknown';
   }
@@ -46,10 +53,11 @@ router.get('/check', async (_req, res) => {
   try {
     const [current, release] = await Promise.all([getCurrentVersion(), fetchGithubRelease()]);
     const latest = release.tag_name;
+    const normalise = v => v.replace(/^v/, '');
     res.json({
       current,
       latest,
-      upToDate: current === latest,
+      upToDate: normalise(current) === normalise(latest),
       releaseNotes: release.body ?? '',
       releaseUrl: release.html_url ?? '',
     });

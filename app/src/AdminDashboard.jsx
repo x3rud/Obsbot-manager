@@ -113,20 +113,25 @@ export default function AdminDashboard() {
     const errors = {};
     const infos = {};
 
-    await Promise.all(
-      groupCameras.map(async (cam) => {
-        try {
-          const res = await apiClient.sendCommand(cam.ip, command, data, mode);
-          if (res.status !== 200) {
-            errors[cam.id] = `Returned ${res.status}`;
-          }else{
-            infos[cam.id] = `Returned ${res.status}`;
+    // Send to cameras 3 at a time — firing all simultaneously overwhelms
+    // the cameras' embedded HTTP servers and causes 500s beyond the first couple.
+    const CONCURRENCY = 3;
+    for (let i = 0; i < groupCameras.length; i += CONCURRENCY) {
+      await Promise.all(
+        groupCameras.slice(i, i + CONCURRENCY).map(async (cam) => {
+          try {
+            const res = await apiClient.sendCommand(cam.ip, command, data, mode);
+            if (res.status !== 200) {
+              errors[cam.id] = `Returned ${res.status}`;
+            } else {
+              infos[cam.id] = `Returned ${res.status}`;
+            }
+          } catch (err) {
+            errors[cam.id] = err.message;
           }
-        } catch (err) {
-          errors[cam.id] = err.message;
-        }
-      })
-    );
+        })
+      );
+    }
     setErrors(errors);
     setInfos(infos);
     if(refresh) {
