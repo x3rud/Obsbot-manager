@@ -324,9 +324,9 @@ export default function AdminDashboard() {
           tooltip="Open webpage"
           icon={<GlobeAltIcon className="size-5" />}
         />
+        {joystickButton}
         <CameraDialog onClick={handleEditCamera} trigger={<PencilSquareIcon className="size-5" />} groups={groups} camera={cam} />
         <DeleteAlterDialog onClick={() => handleDeleteCamera(cam.id)} />
-        {joystickButton}
       </div>
     );
   }
@@ -435,7 +435,7 @@ export default function AdminDashboard() {
                     <Button size="sm" onClick={() => sendCommand('put', group.id, 'ai/workmode', { mode: 'none' })}>
                       Stop Tracking
                     </Button>
-                    <Button size="sm" onClick={() => sendCommand('put', group.id, 'ptz/preset', { operation: 'call', id: 0 }, false)}>
+                    <Button size="sm" onClick={() => sendCommand('post', group.id, 'ptz/reset', {}, false)}>
                       Reset position
                     </Button>
                     <BulkCameraDialog groupId={group.id} groupName={group.name} onImport={handleBulkAddCameras} trigger="Bulk Add" />
@@ -518,6 +518,8 @@ export default function AdminDashboard() {
                           <th className="p-3 text-left font-medium text-muted-foreground">Name</th>
                           <th className="p-3 text-left font-medium text-muted-foreground">IP</th>
                           <th className="p-3 text-left font-medium text-muted-foreground">Tracking</th>
+                          <th className="p-3 text-left font-medium text-muted-foreground">Gestures</th>
+                          <th className="p-3 text-left font-medium text-muted-foreground">Resolution</th>
                           <th className="p-3 text-right font-medium text-muted-foreground">Actions</th>
                         </tr>
                       </thead>
@@ -538,8 +540,8 @@ export default function AdminDashboard() {
                             <td className="p-3">
                               <span className={alives[cam.id] ? 'text-green-600' : 'text-red-600'}>⬤</span>
                             </td>
-                            <td className="p-3">
-                              <CameraInfoPopover cam={cam} />
+                            <td className="p-3 font-medium">
+                              {cam.name}
                               {errors[cam.id] && <p className="text-yellow-400 text-xs mt-0.5">{errors[cam.id]}</p>}
                               {infos[cam.id] && <p className="text-green-400 text-xs mt-0.5">{infos[cam.id]}</p>}
                             </td>
@@ -548,6 +550,16 @@ export default function AdminDashboard() {
                               <span className={`text-xs px-2 py-0.5 rounded-full ${statuses[cam.id] ? 'bg-green-900 text-green-300' : 'bg-gray-800 text-gray-400'}`}>
                                 {statuses[cam.id] ? 'Tracking' : 'Idle'}
                               </span>
+                            </td>
+                            <td className="p-3">
+                              <div className="flex gap-2 text-base">
+                                <span title="Tracking gesture" className={cameraInfo[cam.id]?.lockedtarget ? 'opacity-100' : 'opacity-25'}>🎯</span>
+                                <span title="Recording gesture" className={cameraInfo[cam.id]?.recording ? 'opacity-100' : 'opacity-25'}>🎥</span>
+                                <span title="Zoom gesture" className={cameraInfo[cam.id]?.zoom ? 'opacity-100' : 'opacity-25'}>🔍</span>
+                              </div>
+                            </td>
+                            <td className="p-3 text-muted-foreground text-xs">
+                              {cameraInfo[cam.id]?.resolution ?? '—'}
                             </td>
                             <td className="p-3">
                               <div className="flex justify-end">
