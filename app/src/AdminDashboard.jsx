@@ -8,6 +8,7 @@ import { HandRaisedIcon, ViewfinderCircleIcon, ArrowsPointingInIcon, GlobeAltIco
 import DeleteAlterDialog from './components/ui/delete-alert-dialog';
 import CameraDialog from './components/ui/camera-dialog';
 import GroupDialog from './components/ui/group-dialog';
+import BulkCameraDialog from './components/ui/bulk-camera-dialog';
 import {
   Popover,
   PopoverContent,
@@ -235,6 +236,16 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleBulkAddCameras = async (cameraList) => {
+    try {
+      const res = await apiClient.bulkAddCameras(cameraList);
+      toast.success(`Added ${res.data.inserted} camera(s)${res.data.skipped.length ? `, skipped ${res.data.skipped.length}` : ''}`);
+      fetchData();
+    } catch (err) {
+      toast.error('Bulk add failed: ' + err.message);
+    }
+  };
+
   const handleDeleteGroup = async (id) => {
     try {
       await apiClient.deleteGroup(id);
@@ -339,6 +350,12 @@ export default function AdminDashboard() {
                   <Button onClick={() => sendCommand('put', group.id, 'ai/workmode', {mode: "humanTrackingSingleMode"})}> {group.name} - Start Tracking</Button>
                   <Button onClick={() => sendCommand('put',group.id, 'ai/workmode', {mode: "none"})}>{group.name} - Stop Tracking</Button>
                   <Button onClick={() => sendCommand('put', group.id, 'ptz/preset', { operation: "call", id: 0}, false)}>{group.name} - Reset position</Button>
+                  <BulkCameraDialog
+                    groupId={group.id}
+                    groupName={group.name}
+                    onImport={handleBulkAddCameras}
+                    trigger="Bulk Add"
+                  />
                   <DeleteAlterDialog
                     onClick={() => handleDeleteGroup(group.id)}
                     description={`This will permanently delete the group "${group.name}" and all its cameras from the database.`}

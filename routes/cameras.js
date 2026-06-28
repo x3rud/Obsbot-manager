@@ -31,6 +31,34 @@ router.put('/:id', (req, res) => {
   });
 });
 
+router.post('/bulk', (req, res) => {
+  const { cameras } = req.body;
+  if (!Array.isArray(cameras) || cameras.length === 0)
+    return res.status(400).json({ error: 'cameras array is required.' });
+
+  const stmt = db.prepare('INSERT INTO cameras (name, ip, groupId) VALUES (?, ?, ?)');
+  const skipped = [];
+  const ids = [];
+
+  db.serialize(() => {
+    cameras.forEach(cam => {
+      if (!cam.name || !cam.ip || !cam.groupId) {
+        skipped.push(cam);
+        return;
+      }
+      stmt.run(cam.name, cam.ip, cam.groupId, function (err) {
+        if (err) skipped.push({ ...cam, error: err.message });
+        else ids.push(this.lastID);
+      });
+    });
+
+    stmt.finalize(err => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.status(201).json({ inserted: ids.length, skipped });
+    });
+  });
+});
+
 router.delete('/:id', (req, res) => {
   const { id } = req.params;
   const stmt = db.prepare('DELETE FROM cameras WHERE id = ?');

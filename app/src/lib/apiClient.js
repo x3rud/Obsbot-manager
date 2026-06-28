@@ -15,6 +15,7 @@ export const apiClient = {
 
   getCameras: () => client.get('/cameras'),
   addCamera: (camera) => client.post('/cameras', camera),
+  bulkAddCameras: (cameras) => client.post('/cameras/bulk', { cameras }),
   editCamera: (id, camera) => client.put(`/cameras/${id}`, camera),
   deleteCamera: (id) => client.delete(`/cameras/${id}`),
 
