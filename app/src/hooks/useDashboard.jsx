@@ -107,7 +107,7 @@ export function useDashboard() {
         },
       }));
     } catch {
-      setErrors(prev => ({ ...prev, [cam.id]: 'Failed to fetch camera info' }));
+      // Silently ignore — offline cameras are already shown via the alive indicator
     }
   }
 

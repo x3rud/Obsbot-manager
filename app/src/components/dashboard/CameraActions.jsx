@@ -72,22 +72,6 @@ export default function CameraActions({ cam }) {
         icon={<GlobeAltIcon className="size-5" />}
       />
       <Tooltip>
-        <CameraDialog
-          onClick={handleEditCamera}
-          trigger={
-            <TooltipTrigger asChild>
-              <button className="p-1.5 rounded hover:bg-accent text-foreground transition-colors">
-                <PencilSquareIcon className="size-5" />
-              </button>
-            </TooltipTrigger>
-          }
-          groups={groups}
-          camera={cam}
-        />
-        <TooltipContent>Edit</TooltipContent>
-      </Tooltip>
-      <DeleteAlterDialog onClick={() => handleDeleteCamera(cam.id)} />
-      <Tooltip>
         <CameraPresetsDialog
           cam={cam}
           trigger={
@@ -114,6 +98,22 @@ export default function CameraActions({ cam }) {
         <TooltipContent>Settings</TooltipContent>
       </Tooltip>
       {joystickButton}
+      <Tooltip>
+        <CameraDialog
+          onClick={handleEditCamera}
+          trigger={
+            <TooltipTrigger asChild>
+              <button className="p-1.5 rounded hover:bg-accent text-foreground transition-colors">
+                <PencilSquareIcon className="size-5" />
+              </button>
+            </TooltipTrigger>
+          }
+          groups={groups}
+          camera={cam}
+        />
+        <TooltipContent>Edit</TooltipContent>
+      </Tooltip>
+      <DeleteAlterDialog onClick={() => handleDeleteCamera(cam.id)} />
     </div>
   );
 }
