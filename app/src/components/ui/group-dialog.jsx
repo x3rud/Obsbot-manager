@@ -21,7 +21,7 @@ export default function GroupDialog({onClick, trigger}) {
         <Dialog>
         <form>
             <DialogTrigger asChild>
-            <Button>{trigger}</Button>
+              {trigger}
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>

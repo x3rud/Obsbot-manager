@@ -1,14 +1,15 @@
-// components/IconTooltipButton.jsx
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-import { Button } from '@/components/ui/button';
 
 export default function IconTooltipButton({ onClick, tooltip, icon, className = '' }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button onClick={onClick} className={className}>
+        <button
+          onClick={onClick}
+          className={`p-1.5 rounded hover:bg-accent text-foreground transition-colors ${className}`}
+        >
           {icon}
-        </Button>
+        </button>
       </TooltipTrigger>
       <TooltipContent>{tooltip}</TooltipContent>
     </Tooltip>

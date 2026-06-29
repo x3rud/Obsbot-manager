@@ -34,7 +34,7 @@ export default function CameraDialog({onClick, trigger, camera = null, groups}) 
         <Dialog>
         <form>
             <DialogTrigger asChild>
-            <Button>{trigger}</Button>
+              {trigger}
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
