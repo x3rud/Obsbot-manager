@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { apiClient } from '@/lib/apiClient'
@@ -39,14 +40,14 @@ const EV_VALUES = ['-3.0','-2.7','-2.3','-2.0','-1.7','-1.3','-1.0','-0.7','-0.3
 const SHUTTER_VALUES = ['1/6400','1/5000','1/3200','1/2500','1/2000','1/1600','1/1250','1/1000','1/800','1/640','1/500','1/400','1/320','1/240','1/200','1/160','1/120','1/100','1/80','1/60','1/50','1/40','1/30']
 const ISO_MIN = ['100','200','400','800','1600','3200']
 const ISO_MAX = ['200','400','800','1600','3200','6400']
-const TABS = ['Recording','Exposure','White Balance','Image Style']
+const TABS = ['Camera', 'Recording', 'Exposure', 'White Balance', 'Image Style']
 
-function SliderRow({ label, value, min, max, step = 1, onChange }) {
+function SliderRow({ label, value, displayValue, min, max, step = 1, onChange }) {
   return (
     <div className="grid gap-1.5">
       <div className="flex justify-between">
         <Label>{label}</Label>
-        <span className="text-xs text-muted-foreground tabular-nums">{value}</span>
+        <span className="text-xs text-muted-foreground tabular-nums">{displayValue ?? value}</span>
       </div>
       <input type="range" min={min} max={max} step={step} value={value}
         onChange={e => onChange(Number(e.target.value))}
@@ -64,11 +65,13 @@ function FieldRow({ label, children }) {
   )
 }
 
-export default function CameraSettingsDialog({ cam, trigger }) {
+export default function CameraSettingsDialog({ cam, trigger, groups = [], onEdit, onDelete }) {
   const [open, setOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState('Recording')
+  const [activeTab, setActiveTab] = useState('Camera')
   const [loading, setLoading] = useState(false)
   const [s, setS] = useState({})
+  const [camEdit, setCamEdit] = useState({ name: cam.name, ip: cam.ip, groupId: cam.groupId })
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const upd = (key, val) => setS(prev => ({ ...prev, [key]: val }))
 
@@ -136,7 +139,7 @@ export default function CameraSettingsDialog({ cam, trigger }) {
   async function applyRecording() {
     await toast.promise(
       Promise.all([
-        put('record/resolution', { resolution: s.resolution }),
+        //put('record/resolution', { resolution: s.resolution }),
         put('record/bitrate', { bitrate: Number(s.bitrate) }),
         put('record/encoder', { encoder: s.encoder }),
       ]),
@@ -218,10 +221,45 @@ export default function CameraSettingsDialog({ cam, trigger }) {
               ))}
             </div>
 
+            {/* ── Camera ── */}
+            {activeTab === 'Camera' && (
+              <div className="grid gap-4">
+                <FieldRow label="Name">
+                  <Input value={camEdit.name} onChange={e => setCamEdit(p => ({ ...p, name: e.target.value }))} />
+                </FieldRow>
+                <FieldRow label="IP Address">
+                  <Input value={camEdit.ip} onChange={e => setCamEdit(p => ({ ...p, ip: e.target.value }))} />
+                </FieldRow>
+                {groups.length > 0 && (
+                  <FieldRow label="Group">
+                    <Select value={String(camEdit.groupId)} onValueChange={v => setCamEdit(p => ({ ...p, groupId: v }))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {groups.map(g => <SelectItem key={g.id} value={String(g.id)}>{g.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </FieldRow>
+                )}
+                <div className="flex gap-2">
+                  <Button className="flex-1" onClick={() => { onEdit?.({ ...cam, ...camEdit }); setOpen(false) }}>Save</Button>
+                  <Button variant="destructive" onClick={() => setConfirmDelete(true)}>Delete</Button>
+                </div>
+                {confirmDelete && (
+                  <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 grid gap-2">
+                    <p className="text-sm text-destructive font-medium">This will permanently delete this camera.</p>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => setConfirmDelete(false)}>Cancel</Button>
+                      <Button size="sm" variant="destructive" onClick={() => { onDelete?.(cam.id); setOpen(false) }}>Yes, delete</Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* ── Recording ── */}
             {activeTab === 'Recording' && (
               <div className="grid gap-4">
-                <FieldRow label="Resolution">
+                <FieldRow label="Resolution (Don't even try  change res not working from SDK)">
                   <Select value={s.resolution} onValueChange={v => upd('resolution', v)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent className="max-h-60">
@@ -240,7 +278,7 @@ export default function CameraSettingsDialog({ cam, trigger }) {
                   </Select>
                 </FieldRow>
 
-                <SliderRow label="Bitrate" value={`${s.bitrate} Mbps`} min={1} max={160}
+                <SliderRow label="Bitrate" value={s.bitrate} displayValue={`${s.bitrate} Mbps`} min={1} max={160}
                   onChange={v => upd('bitrate', v)} />
 
                 <Button onClick={applyRecording}>Apply Recording Settings</Button>
@@ -345,7 +383,7 @@ export default function CameraSettingsDialog({ cam, trigger }) {
                 </FieldRow>
 
                 {s.wbMode === 'manual' && (
-                  <SliderRow label={`Color Temperature`} value={`${s.wbTemp} K`}
+                  <SliderRow label="Color Temperature" value={s.wbTemp} displayValue={`${s.wbTemp} K`}
                     min={2000} max={10000} step={100}
                     onChange={v => upd('wbTemp', v)} />
                 )}

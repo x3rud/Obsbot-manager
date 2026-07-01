@@ -24,7 +24,8 @@ export default function CameraPresetsDialog({ cam, trigger }) {
     setLoading(true)
     try {
       const res = await apiClient.sendCommand(cam.ip, 'ptz/preset', null, 'get')
-      setPresets(res.data.presetlist ?? [])
+      console.log('Presets response:', res.data)
+      setPresets(res.data.presetList ?? [])
     } catch {
       toast.error('Could not load presets')
     } finally {

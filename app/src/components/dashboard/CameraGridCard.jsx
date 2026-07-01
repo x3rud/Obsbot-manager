@@ -2,10 +2,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useDashboardContext } from '@/context/DashboardContext';
 import CameraInfoPopover from './CameraInfoPopover';
 import CameraActions from './CameraActions';
-import PtzJoystick from '@/components/ui/ptz-joystick';
 
 export default function CameraGridCard({ cam }) {
-  const { alives, errors, infos, joystickOpen, selectedCameras, toggleCamera } = useDashboardContext();
+  const { alives, errors, infos, selectedCameras, toggleCamera } = useDashboardContext();
 
   return (
     <Card className={`bg-background p-2 transition-colors ${selectedCameras[cam.id] ? 'ring-2 ring-blue-500' : ''}`}>
@@ -31,7 +30,6 @@ export default function CameraGridCard({ cam }) {
           <CameraActions cam={cam} />
         </div>
 
-        {joystickOpen[cam.id] && <PtzJoystick cam={cam} />}
       </CardContent>
     </Card>
   );

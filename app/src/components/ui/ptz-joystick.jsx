@@ -135,7 +135,7 @@ export default function PtzJoystick({ cam }) {
   };
 
   return (
-    <div className="flex flex-col items-center gap-3 pt-3 border-t border-zinc-700 mt-2">
+    <div className="flex flex-col items-center gap-3">
       <p className="text-xs text-zinc-500 uppercase tracking-widest">PTZ Control</p>
 
       {/* Joystick */}

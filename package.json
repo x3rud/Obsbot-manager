@@ -3,6 +3,7 @@
   "version": "0.2.3",
   "main": "index.js",
   "scripts": {
+    "dev": "concurrently -n \"server,client\" -c \"blue,green\" \"nodemon index.js\" \"pnpm --dir app run dev\"",
     "start": "node index.js",
     "build": "cd app && pnpm install && pnpm run build",
     "build:exe": "pnpm run build && pkg . --targets node20-win-x64 --output dist/obsbot.exe",
@@ -14,7 +15,9 @@
       "node_modules/sqlite3/build/**",
       "app/dist/**/*"
     ],
-    "targets": ["node20-win-x64"],
+    "targets": [
+      "node20-win-x64"
+    ],
     "outputPath": "dist"
   },
   "author": "",
@@ -35,11 +38,15 @@
   "devDependencies": {
     "@eslint/js": "^9.30.1",
     "@yao-pkg/pkg": "^5.16.0",
+    "concurrently": "^10.0.3",
     "eslint": "^9.30.1",
     "eslint-plugin-react": "^7.37.5",
-    "globals": "^16.3.0"
+    "globals": "^16.3.0",
+    "nodemon": "^3.1.14"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["sqlite3"]
+    "onlyBuiltDependencies": [
+      "sqlite3"
+    ]
   }
 }
