@@ -23,11 +23,13 @@ app.use('/api/command',        require('./routes/command'));
 app.use('/api/ping',           require('./routes/ping'));
 app.use('/api/update',         require('./routes/update'));
 
-app.listen(3001, () => {
-  Logger.info('API running on http://localhost:3001');
-  // When running as a bundled .exe, open the browser automatically
+app.listen(3001, '0.0.0.0', () => {
+  const { networkInterfaces } = require('os');
+  const nets = networkInterfaces();
+  const localIp = Object.values(nets).flat().find(n => n.family === 'IPv4' && !n.internal)?.address ?? 'localhost';
+  Logger.info(`API running on http://localhost:3001  (network: http://${localIp}:3001)`);
   if (process.pkg) {
     const { exec } = require('child_process');
-    setTimeout(() => exec('start http://localhost:3001'), 1200);
+    setTimeout(() => exec(`start http://${localIp}:3001`), 1200);
   }
 });
